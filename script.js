@@ -1,73 +1,65 @@
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
-// Tamaño del canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Caracteres Matrix
 const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZあいうえおカキクケコ";
-const fontSize = 16;
-const columns = Math.floor(canvas.width / fontSize);
+const size = 14;
+const columns = Math.floor(canvas.width / size);
+const drops = Array(columns).fill(1);
 
-// Inicializar drops
-const drops = Array.from({ length: columns }, () => Math.random() * canvas.height / fontSize);
+// Cargar imagen del Tux
+const tux = new Image();
+tux.src = "https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg";
+const tuxSize = 60;
+let tuxX = canvas.width / 2;
+let tuxY = canvas.height / 2;
+let dx = 3;
+let dy = 2;
 
-// Dibujar efecto Matrix
-function drawMatrix() {
-    // Fondo semitransparente para efecto suave
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+function draw() {
+    // Fondo semitransparente
+    ctx.fillStyle = "rgba(0,0,0,0.08)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px monospace";
+    ctx.font = size + "px monospace";
 
     for (let i = 0; i < drops.length; i++) {
-        const char = chars.charAt(Math.floor(Math.random() * chars.length));
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        const x = i * size;
+        const y = drops[i] * size;
 
-        // Avance suave y reseteo aleatorio
-        drops[i] = drops[i] + 0.5;
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        // Evitar dibujar sobre Tux
+        if (!(x > tuxX - size && x < tuxX + tuxSize && y > tuxY - size && y < tuxY + tuxSize)) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+
+            // Efecto de brillo: columnas aleatoriamente más claras
+            ctx.fillStyle = Math.random() > 0.975 ? "#FFF" : "#0F0";
+            ctx.fillText(text, x, y);
+        }
+
+        if (y > canvas.height && Math.random() > 0.975) {
             drops[i] = 0;
         }
+        drops[i]++;
     }
+
+    // Dibujar Tux
+    ctx.drawImage(tux, tuxX, tuxY, tuxSize, tuxSize);
+
+    // Actualizar posición de Tux
+    tuxX += dx;
+    tuxY += dy;
+
+    // Rebote en los bordes
+    if (tuxX + tuxSize > canvas.width || tuxX < 0) dx = -dx;
+    if (tuxY + tuxSize > canvas.height || tuxY < 0) dy = -dy;
 }
 
-// Tux que rebota
-const tux = document.getElementById("tux");
-tux.style.position = "absolute";
-tux.style.width = "100px";
-tux.style.zIndex = 10;
-tux.style.willChange = "transform";
-
-let tuxX = Math.random() * (window.innerWidth - 100);
-let tuxY = Math.random() * (window.innerHeight - 100);
-let speedX = 2 + Math.random(); // velocidad X más suave
-let speedY = 1.5 + Math.random(); // velocidad Y más suave
-
-function moveTux() {
-    tuxX += speedX;
-    tuxY += speedY;
-
-    if (tuxX + tux.width >= window.innerWidth || tuxX <= 0) speedX = -speedX;
-    if (tuxY + tux.height >= window.innerHeight || tuxY <= 0) speedY = -speedY;
-
-    tux.style.left = tuxX + "px";
-    tux.style.top = tuxY + "px";
-}
-
-// Animación principal
-function animate() {
-    drawMatrix();
-    moveTux();
-    requestAnimationFrame(animate);
-}
-
-animate();
-
-// Ajuste al redimensionar ventana
+// Ajustar canvas al redimensionar
 window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
+
+setInterval(draw, 40);
