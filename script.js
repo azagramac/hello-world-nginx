@@ -9,18 +9,18 @@ const size = 14;
 const columns = Math.floor(canvas.width / size);
 const drops = Array(columns).fill(1);
 
-// Cargar imagen del Tux
+// Imagen del Tux
 const tux = new Image();
 tux.src = "https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg";
-const tuxSize = 60;
+const tuxSize = 48;
 let tuxX = canvas.width / 2;
 let tuxY = canvas.height / 2;
-let dx = 3;
-let dy = 2;
+let dx = 2.5; // velocidad X suave
+let dy = 2;   // velocidad Y suave
 
 function draw() {
-    // Fondo semitransparente
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
+    // Fondo semitransparente para efecto Matrix suave
+    ctx.fillStyle = "rgba(0,0,0,0.05)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = size + "px monospace";
@@ -32,16 +32,12 @@ function draw() {
         // Evitar dibujar sobre Tux
         if (!(x > tuxX - size && x < tuxX + tuxSize && y > tuxY - size && y < tuxY + tuxSize)) {
             const text = chars.charAt(Math.floor(Math.random() * chars.length));
-
-            // Efecto de brillo: columnas aleatoriamente más claras
             ctx.fillStyle = Math.random() > 0.975 ? "#FFF" : "#0F0";
             ctx.fillText(text, x, y);
         }
 
-        if (y > canvas.height && Math.random() > 0.975) {
-            drops[i] = 0;
-        }
-        drops[i]++;
+        // Avance de columna
+        drops[i] = y > canvas.height && Math.random() > 0.975 ? 0 : drops[i] + 0.5; // más suave
     }
 
     // Dibujar Tux
