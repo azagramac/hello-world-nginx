@@ -1,0 +1,92 @@
+name: 🐳 Build docker image
+
+on:
+  push:
+    branches:
+      - 'main'
+
+permissions:
+  contents: read
+
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v6
+
+      - name: 🔑 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📌 Extract version from Dockerfile
+        run: |
+          VERSION=$(grep -i 'LABEL version' Dockerfile | cut -d'"' -f2)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "📝 Detected Docker version: $VERSION"
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build & Push Multi-Arch Docker image
+        run: |
+          set -e
+          set -o pipefail
+
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/matrix-nginx
+
+          echo "📦 Building multi-arch image for amd64 & arm64"
+
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --tag $IMAGE:latest \
+            --tag $IMAGE:$VERSION \
+            --push \
+            .
+
+          echo "🚀 Multi-arch Docker images pushed: latest and $VERSION"
+
+      - name: 🎉 Verify Docker Hub tags
+        shell: bash
+        run: |
+          set -e
+          set -o pipefail
+          
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/matrix-nginx
+
+          echo "🔍 Verifying Docker Hub tags for: $IMAGE"
+
+          TAGS=$(curl -s "https://hub.docker.com/v2/repositories/$IMAGE/tags?page_size=100" | jq -r ".results[].name")
+
+          echo "📄 Tags in Docker Hub repo:"
+          echo "$TAGS"
+
+          echo "## 🐳 Docker Hub Tag Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔖 Tag | Estado |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          if echo "$TAGS" | grep -q "latest"; then
+            LATEST="✅ Presente"
+          else
+            LATEST="❌ Faltante"
+          fi
+
+          if echo "$TAGS" | grep -q "$VERSION"; then
+            VERSION_STATUS="✅ Presente"
+          else
+            VERSION_STATUS="❌ Faltante"
+          fi
+
+          echo "| latest | $LATEST |" >> $GITHUB_STEP_SUMMARY
+          echo "| $VERSION | $VERSION_STATUS |" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$LATEST" == "✅ Presente" && "$VERSION_STATUS" == "✅ Presente" ]]; then
+            echo "🎯 Both tags are present on Docker Hub"
+          else
+            echo "⚠️ Verification failed!"
+            exit 1
+          fi
