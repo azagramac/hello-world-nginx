@@ -5,61 +5,50 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZあいうえおカキクケコ";
-const size = 14;
-const columns = Math.floor(canvas.width / size);
-const drops = Array(columns).fill(1);
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = Array.from({ length: columns }, () => 1);
 
-// Cargar imagen del Tux
-const tux = new Image();
-tux.src = "https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg";
-const tuxSize = 60;
-let tuxX = canvas.width / 2;
-let tuxY = canvas.height / 2;
-let dx = 3;
-let dy = 2;
-
-function draw() {
-    // Fondo semitransparente
-    ctx.fillStyle = "rgba(0,0,0,0.08)";
+function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.08)"; // efecto estela a 0
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.font = size + "px monospace";
+    ctx.fillStyle = "#0F0";
+    ctx.font = fontSize + "px monospace";
 
     for (let i = 0; i < drops.length; i++) {
-        const x = i * size;
-        const y = drops[i] * size;
-
-        // Evitar dibujar sobre Tux
-        if (!(x > tuxX - size && x < tuxX + tuxSize && y > tuxY - size && y < tuxY + tuxSize)) {
-            const text = chars.charAt(Math.floor(Math.random() * chars.length));
-
-            // Efecto de brillo: columnas aleatoriamente más claras
-            ctx.fillStyle = Math.random() > 0.975 ? "#FFF" : "#0F0";
-            ctx.fillText(text, x, y);
-        }
-
-        if (y > canvas.height && Math.random() > 0.975) {
-            drops[i] = 0;
-        }
-        drops[i]++;
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        drops[i] = drops[i] * fontSize > canvas.height && Math.random() > 0.975 ? 0 : drops[i] + 1;
     }
-
-    // Dibujar Tux
-    ctx.drawImage(tux, tuxX, tuxY, tuxSize, tuxSize);
-
-    // Actualizar posición de Tux
-    tuxX += dx;
-    tuxY += dy;
-
-    // Rebote en los bordes
-    if (tuxX + tuxSize > canvas.width || tuxX < 0) dx = -dx;
-    if (tuxY + tuxSize > canvas.height || tuxY < 0) dy = -dy;
 }
 
-// Ajustar canvas al redimensionar
-window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+// Rebote mas fluido
+const tux = document.getElementById("tux");
+let tuxX = Math.random() * (window.innerWidth - 100);
+let tuxY = Math.random() * (window.innerHeight - 100);
+let speedX = 6 + Math.random() * 4; // más velocidad
+let speedY = 5 + Math.random() * 4;
 
-setInterval(draw, 40);
+tux.style.position = "absolute";
+tux.style.width = "100px";
+tux.style.zIndex = 10; // para que quede encima del canvas
+
+function moveTux() {
+    tuxX += speedX;
+    tuxY += speedY;
+
+    if (tuxX + tux.width >= window.innerWidth || tuxX <= 0) speedX = -speedX;
+    if (tuxY + tux.height >= window.innerHeight || tuxY <= 0) speedY = -speedY;
+
+    tux.style.left = tuxX + "px";
+    tux.style.top = tuxY + "px";
+}
+
+// Animacion sin doble refresco
+function animate() {
+    drawMatrix();
+    moveTux();
+    requestAnimationFrame(animate);
+}
+
+animate();
