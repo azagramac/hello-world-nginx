@@ -1,18 +1,22 @@
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
+// Tamaño del canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Caracteres Matrix
 const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZあいうえおカキクケコ";
 const fontSize = 16;
 const columns = Math.floor(canvas.width / fontSize);
 
-const drops = Array.from({ length: columns }, () => 1);
+// Inicializar drops
+const drops = Array.from({ length: columns }, () => Math.random() * canvas.height / fontSize);
 
+// Dibujar efecto Matrix
 function drawMatrix() {
     // Fondo semitransparente para efecto suave
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; 
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = "#0F0";
@@ -22,8 +26,11 @@ function drawMatrix() {
         const char = chars.charAt(Math.floor(Math.random() * chars.length));
         ctx.fillText(char, i * fontSize, drops[i] * fontSize);
 
-        // Resetea la columna al azar
-        drops[i] = drops[i] * fontSize > canvas.height && Math.random() > 0.975 ? 0 : drops[i] + 1;
+        // Avance suave y reseteo aleatorio
+        drops[i] = drops[i] + 0.5;
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+        }
     }
 }
 
@@ -36,8 +43,8 @@ tux.style.willChange = "transform";
 
 let tuxX = Math.random() * (window.innerWidth - 100);
 let tuxY = Math.random() * (window.innerHeight - 100);
-let speedX = 4 + Math.random() * 3; // velocidad X
-let speedY = 3 + Math.random() * 3; // velocidad Y
+let speedX = 2 + Math.random(); // velocidad X más suave
+let speedY = 1.5 + Math.random(); // velocidad Y más suave
 
 function moveTux() {
     tuxX += speedX;
@@ -50,6 +57,7 @@ function moveTux() {
     tux.style.top = tuxY + "px";
 }
 
+// Animación principal
 function animate() {
     drawMatrix();
     moveTux();
@@ -58,6 +66,7 @@ function animate() {
 
 animate();
 
+// Ajuste al redimensionar ventana
 window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
