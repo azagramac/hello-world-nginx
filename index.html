@@ -2,18 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Hello World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World 🚀</title>
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
+    <meta name="description" content=Hello World">
 </head>
 <body>
-    <canvas id="matrix"></canvas>
+    <canvas id="matrix" aria-hidden="true"></canvas>
 
-    <img id="tux" src="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" />
+    <img id="tux" 
+         src="https://upload.wikimedia.org/wikipedia/commons/3/35/Tux.svg" 
+         alt="Tux, la mascota de Linux" 
+         aria-label="Tux animado">
 
-    <div class="title">
+    <header class="title">
         <h1>Hello World 🚀</h1>
-    </div>
+    </header>
 
     <script src="script.js"></script>
+
+    <script>
+        const canvas = document.getElementById('matrix');
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
 </body>
 </html>
