@@ -1,6 +1,7 @@
 FROM nginx:1.29.3-alpine
 
 LABEL description="Hello World"
+LABEL version="1.29.3-alpine"
 
 RUN rm -rf /usr/share/nginx/html/*
 COPY html/ /usr/share/nginx/html/
